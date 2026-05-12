@@ -18,6 +18,14 @@
         <!-- PSR-4 autoloading: PascalCase filenames, not class- prefix. -->
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <!-- Typed PHP 8.0+ signatures make most function-level PHPDoc
+             redundant noise. We document a method only when its name
+             + parameter types don't already tell the full story. -->
+        <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
+        <exclude name="Squiz.Commenting.VariableComment.Missing"/>
+        <exclude name="Squiz.Commenting.ClassComment.Missing"/>
+        <exclude name="Squiz.Commenting.FileComment.Missing"/>
+        <exclude name="Generic.Commenting.DocComment.MissingShort"/>
     </rule>
 
     <rule ref="PHPCompatibilityWP"/>
