@@ -1,0 +1,34 @@
+vendor/
+node_modules/
+build/
+dist/
+*.zip
+*.log
+
+# Vue admin source — the compiled bundle under assets/admin/ ships,
+# but the SFC/TS sources, vite config and tsconfig stay out of the
+# distributed plugin repo.
+vue-admin/
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Composer
+composer.phar
+
+# PHPUnit
+.phpunit.result.cache
+phpunit.xml
+
+# PHPCS
+.phpcs.cache
+
+# Local env
+.env
+.env.local
+
+# Override global gitignore — the .claude/ rules (sorlimit, versioning)
+# belong to every contributor of this repo.
+!.claude/
+!.claude/**

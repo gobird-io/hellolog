@@ -1,0 +1,226 @@
+<?php
+/**
+ * `wp hellolog` WP-CLI commands.
+ *
+ * @package HelloLog
+ */
+
+declare(strict_types=1);
+
+namespace HelloLog\Cli;
+
+use HelloLog\Plugin;
+use HelloLog\Queue\QueueRepository;
+use HelloLog\Settings\Options;
+use HelloLog\Transport\ApiClient;
+use WP_CLI;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Operator surface for the plugin from the CLI. Wraps the same services
+ * the admin UI uses, so behaviour matches the WP admin Settings page.
+ *
+ * Registered as `wp hellolog <subcommand>` once Plugin::boot() runs.
+ */
+final class Command {
+
+	/**
+	 * Show the plugin's current state.
+	 *
+	 * Reports the backend endpoint, whether a token is set, and how many
+	 * rows are sitting in each queue status (pending / sending / dead).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog status
+	 */
+	public function status(): void {
+		$opts   = new Options();
+		$repo   = new QueueRepository();
+		$counts = $repo->counts_by_status();
+
+		WP_CLI::log( 'Endpoint:    ' . Options::ENDPOINT_URL );
+		WP_CLI::log( 'Token set:   ' . ( $opts->is_configured() ? 'yes' : 'NO' ) );
+		WP_CLI::log( 'Anonymize IP: ' . ( $opts->anonymize_ip() ? 'on' : 'off' ) );
+		WP_CLI::log( 'Queue table: ' . $repo->table() );
+		WP_CLI::log( sprintf(
+			'  pending=%d  sending=%d  dead=%d',
+			(int) ( $counts[ QueueRepository::STATUS_PENDING ] ?? 0 ),
+			(int) ( $counts[ QueueRepository::STATUS_SENDING ] ?? 0 ),
+			(int) ( $counts[ QueueRepository::STATUS_DEAD ] ?? 0 )
+		) );
+
+		$disabled = $opts->sensor_filters();
+		if ( ! empty( $disabled ) ) {
+			WP_CLI::log( 'Disabled sensors: ' . implode( ', ', array_keys( array_filter( $disabled ) ) ) );
+		} else {
+			WP_CLI::log( 'Disabled sensors: (none)' );
+		}
+	}
+
+	/**
+	 * Flush the local queue to the backend right now (skip the 30-second tick).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog flush
+	 */
+	public function flush(): void {
+		$opts = new Options();
+		if ( ! $opts->is_configured() ) {
+			WP_CLI::error( 'No site token configured. Run `wp hellolog set-token <value>` first.' );
+		}
+		do_action( 'hellolog_flush_queue' );
+		WP_CLI::success( 'Flush triggered.' );
+	}
+
+	/**
+	 * Send a one-off ping event to the backend (bypasses the queue).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog test
+	 */
+	public function test(): void {
+		$opts = new Options();
+		if ( ! $opts->is_configured() ) {
+			WP_CLI::error( 'No site token configured.' );
+		}
+		$client = new ApiClient( $opts->endpoint_url(), $opts->token() );
+		$batch  = wp_json_encode(
+			[
+				'batch_id' => 'cli-' . substr( md5( (string) microtime( true ) ), 0, 8 ),
+				'events'   => [
+					[
+						'code'        => 9999,
+						'occurred_at' => gmdate( 'Y-m-d\TH:i:s.v\Z' ),
+						'severity'    => 'info',
+						'object'      => 'system',
+						'event_type'  => 'connection-test',
+						'message'     => 'Test event from `wp hellolog test`.',
+					],
+				],
+			]
+		);
+		$result = $client->post_batch( is_string( $batch ) ? $batch : '' );
+		if ( $result->ok ) {
+			WP_CLI::success( sprintf( 'HTTP %d %s', $result->status, $result->body ) );
+			return;
+		}
+		WP_CLI::error( sprintf( 'HTTP %d %s', $result->status, $result->body ) );
+	}
+
+	/**
+	 * Set the site bearer token.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <token>
+	 * : The bearer token issued by the backend (hellolog_live_<prefix>_<secret>).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog set-token hellolog_live_xxxxxxxx_yyyyyyyy...
+	 *
+	 * @subcommand set-token
+	 *
+	 * @param array<int, string> $args
+	 */
+	public function set_token( array $args ): void {
+		$token = (string) ( $args[0] ?? '' );
+		if ( '' === $token ) {
+			WP_CLI::error( 'Empty token.' );
+		}
+		update_option( Options::KEY_TOKEN, sanitize_text_field( $token ) );
+		WP_CLI::success( 'Token saved (last 4: ' . substr( $token, -4 ) . ').' );
+	}
+
+	/**
+	 * Clear the stored site token. Disables the Activity Log surface and the
+	 * outgoing queue until a new token is set.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog clear-token
+	 *
+	 * @subcommand clear-token
+	 */
+	public function clear_token(): void {
+		delete_option( Options::KEY_TOKEN );
+		WP_CLI::success( 'Token cleared.' );
+	}
+
+	/**
+	 * List every registered sensor and whether it's currently enabled.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog sensors
+	 */
+	public function sensors(): void {
+		$disabled = new Options();
+		$disabled = $disabled->sensor_filters();
+
+		$sensors = Plugin::instance()->sensors()->sensors();
+		if ( empty( $sensors ) ) {
+			WP_CLI::warning( 'No sensors registered (plugin booted?).' );
+			return;
+		}
+
+		$rows = [];
+		foreach ( $sensors as $key => $sensor ) {
+			$rows[] = [
+				'key'     => $key,
+				'enabled' => empty( $disabled[ $key ] ) ? 'yes' : 'NO',
+				'class'   => substr( get_class( $sensor ), strrpos( get_class( $sensor ), '\\' ) + 1 ),
+			];
+		}
+		\WP_CLI\Utils\format_items( 'table', $rows, [ 'key', 'enabled', 'class' ] );
+	}
+
+	/**
+	 * Enable a sensor by its key.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <key>
+	 * : Sensor key (run `wp hellolog sensors` to list them).
+	 *
+	 * @subcommand enable-sensor
+	 *
+	 * @param array<int, string> $args
+	 */
+	public function enable_sensor( array $args ): void {
+		$this->update_sensor_state( (string) ( $args[0] ?? '' ), false );
+	}
+
+	/**
+	 * Disable a sensor by its key.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <key>
+	 * : Sensor key (run `wp hellolog sensors` to list them).
+	 *
+	 * @subcommand disable-sensor
+	 *
+	 * @param array<int, string> $args
+	 */
+	public function disable_sensor( array $args ): void {
+		$this->update_sensor_state( (string) ( $args[0] ?? '' ), true );
+	}
+
+	private function update_sensor_state( string $key, bool $disable ): void {
+		if ( '' === $key ) {
+			WP_CLI::error( 'Sensor key required.' );
+		}
+		$filters         = (array) get_option( Options::KEY_SENSOR_FILTERS, [] );
+		$filters[ $key ] = $disable;
+		if ( ! $disable ) {
+			unset( $filters[ $key ] );
+		}
+		update_option( Options::KEY_SENSOR_FILTERS, $filters );
+		WP_CLI::success( sprintf( 'Sensor %s %s.', $key, $disable ? 'disabled' : 'enabled' ) );
+	}
+}

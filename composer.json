@@ -1,0 +1,42 @@
+{
+    "name": "gobird-io/hellolog",
+    "description": "WordPress activity audit log with an external (PostgreSQL + TimescaleDB) storage backend.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/gobird-io/hellolog",
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.0",
+        "woocommerce/action-scheduler": "^3.8"
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3.1",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0",
+        "10up/wp_mock": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "HelloLog\\": "includes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HelloLog\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpcs": "phpcs -p --report=summary,full",
+        "phpcbf": "phpcbf -p",
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,120 @@
+name: Release
+
+# Auto-release pattern: every push to `main` that touches the plugin
+# header file is treated as a version bump. The workflow extracts the
+# Version: line, refuses to do anything if that tag already exists,
+# otherwise builds an installable zip and publishes a GitHub Release.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'hellolog.php'
+
+jobs:
+  release:
+    name: Build & attach plugin zip
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from plugin file
+        id: get_version
+        run: |
+          VERSION=$(grep -m1 "Version:" hellolog.php | sed 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION"
+
+      - name: Check if tag exists
+        id: check_tag
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag v$VERSION already exists — skipping release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag v$VERSION does not exist — building release."
+          fi
+
+      - name: Verify readme.txt stable tag matches
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          set -e
+          README_VERSION=$(grep -oE "^Stable tag:[[:space:]]*[0-9]+\.[0-9]+\.[0-9]+" readme.txt | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+          if [ "$README_VERSION" != "$VERSION" ]; then
+            echo "::error::readme.txt Stable tag ($README_VERSION) doesn't match plugin header ($VERSION)."
+            exit 1
+          fi
+
+      - name: Setup PHP
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies (no dev)
+        if: steps.check_tag.outputs.exists == 'false'
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
+      - name: Build plugin zip
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          set -e
+          BUILD_DIR="build/hellolog"
+          rm -rf build
+          mkdir -p "$BUILD_DIR"
+          # Anything that's purely dev tooling, repo metadata or build
+          # artefacts stays out of the distributable zip. `vue-admin/`
+          # is .gitignored anyway, but we exclude it defensively in
+          # case a contributor commits the source by mistake.
+          rsync -a \
+            --exclude='.git' --exclude='.github' --exclude='.claude' \
+            --exclude='tests' --exclude='node_modules' --exclude='build' \
+            --exclude='dist' --exclude='vue-admin' \
+            --exclude='*.zip' --exclude='*.log' \
+            --exclude='phpunit.xml.dist' --exclude='phpcs.xml.dist' \
+            --exclude='composer.json' --exclude='composer.lock' \
+            --exclude='CHANGELOG.md' --exclude='README.md' \
+            --exclude='.gitignore' --exclude='.phpunit.result.cache' \
+            --exclude='.phpcs.cache' \
+            ./ "$BUILD_DIR/"
+          ( cd build && zip -qr "../hellolog-${VERSION}.zip" hellolog )
+
+      - name: Create tag and release
+        if: steps.check_tag.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: v${{ steps.get_version.outputs.version }}
+          body: |
+            ## helloLOG v${{ steps.get_version.outputs.version }}
+
+            WordPress activity log by **hellowp.io** + **gobird.io**.
+
+            ### Install
+
+            1. Download `hellolog-${{ steps.get_version.outputs.version }}.zip` below.
+            2. WP Admin → Plugins → Add New → Upload Plugin.
+            3. Activate, then open `Tools → helloLOG` and paste your API key.
+
+            See [readme.txt](https://github.com/gobird-io/hellolog/blob/main/readme.txt) for the full changelog.
+          files: hellolog-${{ steps.get_version.outputs.version }}.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true

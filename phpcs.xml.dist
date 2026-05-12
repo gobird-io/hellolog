@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="helloLOG Coding Standards">
+    <description>PHP CodeSniffer ruleset for the helloLOG plugin.</description>
+
+    <file>.</file>
+
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <rule ref="WordPress">
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames"/>
+        <exclude name="Squiz.PHP.CommentedOutCode"/>
+        <!-- PSR-4 autoloading: PascalCase filenames, not class- prefix. -->
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+    </rule>
+
+    <rule ref="PHPCompatibilityWP"/>
+    <config name="testVersion" value="8.0-"/>
+
+    <config name="minimum_wp_version" value="6.4"/>
+
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="hellolog"/>
+            </property>
+        </properties>
+    </rule>
+
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="goal"/>
+                <element value="GOAL"/>
+                <element value="HelloLog"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>
