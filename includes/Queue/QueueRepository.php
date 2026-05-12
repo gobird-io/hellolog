@@ -58,7 +58,7 @@ final class QueueRepository {
 		$now   = current_time( 'mysql', true );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$sql = $wpdb->prepare(
+		$sql  = $wpdb->prepare(
 			"SELECT * FROM {$table}
 			 WHERE status = %s AND next_try <= %s
 			 ORDER BY id ASC

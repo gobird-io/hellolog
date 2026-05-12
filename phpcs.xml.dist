@@ -7,6 +7,11 @@
     <exclude-pattern>/vendor/*</exclude-pattern>
     <exclude-pattern>/node_modules/*</exclude-pattern>
     <exclude-pattern>/tests/*</exclude-pattern>
+    <!-- The Vue admin source lives under vue-admin/; it is .gitignored
+         in the distributable repo but a local dev checkout has it. -->
+    <exclude-pattern>/vue-admin/*</exclude-pattern>
+    <!-- Built Vue bundle is minified, no point in scanning it. -->
+    <exclude-pattern>/assets/admin/*</exclude-pattern>
 
     <arg value="ps"/>
     <arg name="colors"/>
@@ -21,11 +26,14 @@
         <!-- Typed PHP 8.0+ signatures make most function-level PHPDoc
              redundant noise. We document a method only when its name
              + parameter types don't already tell the full story. -->
-        <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
-        <exclude name="Squiz.Commenting.VariableComment.Missing"/>
-        <exclude name="Squiz.Commenting.ClassComment.Missing"/>
-        <exclude name="Squiz.Commenting.FileComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment"/>
+        <exclude name="Squiz.Commenting.VariableComment"/>
+        <exclude name="Squiz.Commenting.ClassComment"/>
+        <exclude name="Squiz.Commenting.FileComment"/>
         <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+        <!-- Don't police inline-comment punctuation; the body is the
+             content, the trailing dot vs. en-dash is editorial. -->
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
     </rule>
 
     <rule ref="PHPCompatibilityWP"/>

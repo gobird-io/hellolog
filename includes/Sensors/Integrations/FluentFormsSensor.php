@@ -64,7 +64,7 @@ final class FluentFormsSensor extends AbstractSensor {
 	 * @param mixed                $form
 	 */
 	public function on_submit( int $entry_id, array $form_data, $form ): void {
-		$title = is_object( $form ) && isset( $form->title ) ? (string) $form->title : '';
+		$title   = is_object( $form ) && isset( $form->title ) ? (string) $form->title : '';
 		$form_id = is_object( $form ) && isset( $form->id ) ? (int) $form->id : 0;
 		$this->emit(
 			5870,

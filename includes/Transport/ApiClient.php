@@ -52,10 +52,10 @@ final class ApiClient {
 		}
 
 		$headers = [
-			'Authorization'  => 'Bearer ' . $this->token,
-			'Content-Type'   => 'application/json',
-			'X-Goal-Sdk'     => self::SDK_HEADER . '/' . HELLOLOG_VERSION,
-			'X-Site-Domain'  => $this->site_domain(),
+			'Authorization' => 'Bearer ' . $this->token,
+			'Content-Type'  => 'application/json',
+			'X-Goal-Sdk'    => self::SDK_HEADER . '/' . HELLOLOG_VERSION,
+			'X-Site-Domain' => $this->site_domain(),
 		];
 		if ( null !== $encoding ) {
 			$headers['Content-Encoding'] = $encoding;

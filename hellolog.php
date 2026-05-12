@@ -36,6 +36,9 @@ require_once HELLOLOG_DIR . 'vendor/woocommerce/action-scheduler/action-schedule
 register_activation_hook( __FILE__, [ \HelloLog\Activator::class, 'activate' ] );
 register_deactivation_hook( __FILE__, [ \HelloLog\Deactivator::class, 'deactivate' ] );
 
-add_action( 'plugins_loaded', static function (): void {
-	\HelloLog\Plugin::instance()->boot();
-} );
+add_action(
+	'plugins_loaded',
+	static function (): void {
+		\HelloLog\Plugin::instance()->boot();
+	}
+);

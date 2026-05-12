@@ -21,10 +21,10 @@ final class RetryPolicy {
 	/** Delay in seconds for attempts 1..N (0-indexed). */
 	private const SCHEDULE = [
 		30,        // 30 s
-		120,       //  2 m
+		120,       // 2 m
 		600,       // 10 m
-		3600,      //  1 h
-		21600,     //  6 h
+		3600,      // 1 h
+		21600,     // 6 h
 		86400,     // 24 h
 	];
 

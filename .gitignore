@@ -28,7 +28,3 @@ phpunit.xml
 .env
 .env.local
 
-# Override global gitignore — the .claude/ rules (sorlimit, versioning)
-# belong to every contributor of this repo.
-!.claude/
-!.claude/**

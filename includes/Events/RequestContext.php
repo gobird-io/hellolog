@@ -47,17 +47,24 @@ final class RequestContext {
 			$ip = self::anonymize( $ip );
 		}
 
-		$ua         = isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( (string) $_SERVER['HTTP_USER_AGENT'], 0, 255 ) : null;
+		$ua         = isset( $_SERVER['HTTP_USER_AGENT'] )
+			? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 255 )
+			: null;
 		$session_id = function_exists( 'wp_get_session_token' ) ? (string) wp_get_session_token() : null;
+		if ( '' === $session_id ) {
+			$session_id = null;
+		}
 
-		return new self( $user_id, $username, $roles, $ip, $ua, $session_id ?: null );
+		return new self( $user_id, $username, $roles, $ip, $ua, $session_id );
 	}
 
 	private static function detect_ip(): ?string {
 		// Trust the request-time IP only; reverse-proxy headers are
 		// out of scope for this capture path — operators that need
 		// X-Forwarded-For handling should configure it on the LB.
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+		$ip = isset( $_SERVER['REMOTE_ADDR'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) )
+			: '';
 
 		return ( '' !== $ip && false !== filter_var( $ip, FILTER_VALIDATE_IP ) ) ? $ip : null;
 	}

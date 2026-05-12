@@ -59,11 +59,12 @@ final class ActivityLogAjax {
 		$accepted = [ 'from', 'to', 'object', 'event_type', 'code', 'q', 'cursor', 'limit', 'user_id' ];
 		$out      = [];
 		foreach ( $accepted as $key ) {
-			$value = $_POST[ $key ] ?? null; // phpcs:ignore WordPress.Security.NonceVerification.Missing
-			if ( null === $value || '' === $value ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked in handle()
+			if ( ! isset( $_POST[ $key ] ) || '' === $_POST[ $key ] ) {
 				continue;
 			}
-			$out[ $key ] = is_string( $value ) ? sanitize_text_field( wp_unslash( $value ) ) : $value;
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked in handle()
+			$out[ $key ] = sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
 		}
 		return $out;
 	}

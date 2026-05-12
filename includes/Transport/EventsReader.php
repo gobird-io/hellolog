@@ -37,7 +37,11 @@ final class EventsReader {
 	 */
 	public function list( array $filters ): array {
 		if ( ! $this->is_configured() ) {
-			return [ 'ok' => false, 'status' => 0, 'body' => 'transport not configured' ];
+			return [
+				'ok'     => false,
+				'status' => 0,
+				'body'   => 'transport not configured',
+			];
 		}
 
 		$query    = $this->build_query_string( $filters );
@@ -54,21 +58,37 @@ final class EventsReader {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return [ 'ok' => false, 'status' => 0, 'body' => $response->get_error_message() ];
+			return [
+				'ok'     => false,
+				'status' => 0,
+				'body'   => $response->get_error_message(),
+			];
 		}
 
 		$status = (int) wp_remote_retrieve_response_code( $response );
 		$body   = (string) wp_remote_retrieve_body( $response );
 		if ( $status < 200 || $status >= 300 ) {
-			return [ 'ok' => false, 'status' => $status, 'body' => $body ];
+			return [
+				'ok'     => false,
+				'status' => $status,
+				'body'   => $body,
+			];
 		}
 
 		$decoded = json_decode( $body, true );
 		if ( ! is_array( $decoded ) ) {
-			return [ 'ok' => false, 'status' => $status, 'body' => 'unparseable response' ];
+			return [
+				'ok'     => false,
+				'status' => $status,
+				'body'   => 'unparseable response',
+			];
 		}
 
-		return [ 'ok' => true, 'status' => $status, 'body' => $decoded ];
+		return [
+			'ok'     => true,
+			'status' => $status,
+			'body'   => $decoded,
+		];
 	}
 
 	/**

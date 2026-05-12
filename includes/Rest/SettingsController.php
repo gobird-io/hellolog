@@ -57,11 +57,11 @@ final class SettingsController {
 
 		return rest_ensure_response(
 			[
-				'endpoint'       => Options::ENDPOINT_URL,
-				'isConfigured'   => $opts->is_configured(),
-				'tokenLastFour'  => '' !== $opts->token() ? substr( $opts->token(), -4 ) : '',
-				'anonymizeIp'    => $opts->anonymize_ip(),
-				'sensors'        => $sensors,
+				'endpoint'      => Options::ENDPOINT_URL,
+				'isConfigured'  => $opts->is_configured(),
+				'tokenLastFour' => '' !== $opts->token() ? substr( $opts->token(), -4 ) : '',
+				'anonymizeIp'   => $opts->anonymize_ip(),
+				'sensors'       => $sensors,
 			]
 		);
 	}

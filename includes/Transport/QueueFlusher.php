@@ -53,7 +53,12 @@ final class QueueFlusher {
 
 		$this->repository->mark_sending( $bundle['ids'] );
 
-		$wire   = wp_json_encode( [ 'batch_id' => $bundle['batch_id'], 'events' => $bundle['events'] ] );
+		$wire   = wp_json_encode(
+			[
+				'batch_id' => $bundle['batch_id'],
+				'events'   => $bundle['events'],
+			]
+		);
 		$result = $this->client->post_batch( is_string( $wire ) ? $wire : '' );
 
 		if ( $result->ok ) {

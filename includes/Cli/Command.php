@@ -44,12 +44,14 @@ final class Command {
 		WP_CLI::log( 'Token set:   ' . ( $opts->is_configured() ? 'yes' : 'NO' ) );
 		WP_CLI::log( 'Anonymize IP: ' . ( $opts->anonymize_ip() ? 'on' : 'off' ) );
 		WP_CLI::log( 'Queue table: ' . $repo->table() );
-		WP_CLI::log( sprintf(
-			'  pending=%d  sending=%d  dead=%d',
-			(int) ( $counts[ QueueRepository::STATUS_PENDING ] ?? 0 ),
-			(int) ( $counts[ QueueRepository::STATUS_SENDING ] ?? 0 ),
-			(int) ( $counts[ QueueRepository::STATUS_DEAD ] ?? 0 )
-		) );
+		WP_CLI::log(
+			sprintf(
+				'  pending=%d  sending=%d  dead=%d',
+				(int) ( $counts[ QueueRepository::STATUS_PENDING ] ?? 0 ),
+				(int) ( $counts[ QueueRepository::STATUS_SENDING ] ?? 0 ),
+				(int) ( $counts[ QueueRepository::STATUS_DEAD ] ?? 0 )
+			)
+		);
 
 		$disabled = $opts->sensor_filters();
 		if ( ! empty( $disabled ) ) {
