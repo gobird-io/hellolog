@@ -1,48 +1,67 @@
 # helloLOG
 
-WordPress activity audit log plugin that ships events to an external
-PostgreSQL + TimescaleDB backend at
-[`api.gobird.io/v1/wordpress-activity-audit-log`](https://api.gobird.io/v1/wordpress-activity-audit-log).
+WordPress activity log by **[hellowp.io](https://hellowp.io)** and
+**[gobird.io](https://gobird.io)**. Captures every notable change on the
+site — logins, content edits, plugin/theme operations, WooCommerce
+events, form submissions, … — and ships them to a managed log backend
+so your WordPress database stays lean.
 
-The plugin keeps **only a small outgoing queue** in your WordPress DB — every
-event is buffered for a few seconds and then pushed to the backend, where
-storage, search, retention, and cross-site aggregation happen.
+Out of the box: **43+ sensors**, WSAL-compatible code ranges, an
+admin UI under **Tools → helloLOG**, WP-CLI subcommands (`wp hellolog
+status|flush|test|sensors|…`), and a token-based privacy model
+(per-site key, optional IP anonymisation).
 
-## Status
+## Install
 
-Scaffold (0.1.0). Sensors, transport layer, settings UI, and the Activity Log
-admin page land in subsequent commits.
+1. Grab the latest `hellolog-<version>.zip` from
+   [Releases](https://github.com/gobird-io/hellolog/releases).
+2. **WP Admin → Plugins → Add New → Upload Plugin** → upload, activate.
+3. Open **Tools → helloLOG → Settings** and paste the API key issued for
+   this site in the goBird admin. Save → the top bar should switch to
+   `Active`. The **Send test event** button confirms end-to-end delivery.
 
-## Layout
+## What it logs
 
-```
-hellolog.php       Plugin header + bootstrap
-uninstall.php                   WP uninstall entry point
-composer.json                   PSR-4 autoload + WPCS + PHPUnit deps
-phpcs.xml.dist                  WordPress Coding Standards ruleset
-readme.txt                      WordPress.org readme
-CHANGELOG.md                    Keep a Changelog
-includes/                       PSR-4 root, namespace HelloLog
-  Plugin.php                    Singleton bootstrap
-  Activator.php                 Queue table DDL + default options
-  Deactivator.php               Cancels Action Scheduler jobs
-  Uninstall.php                 Drops table + options
-languages/                      Translations (.pot, .po, .mo)
-```
+| Range | Area |
+|---|---|
+| 1000–1099 | Auth (login / logout / failed / password reset) |
+| 2000–2499 | Content, taxonomies, comments, menus, widgets |
+| 4000–4599 | User profile / role, multisite, 2FA, app passwords |
+| 5000–5599 | Plugins, themes, Redirection, TablePress, PMP, ACF |
+| 5700–5899 | Form plugins (Gravity, WPForms, CF7, Fluent) |
+| 6000–6499 | Settings / system / files / 404 / REST / XML-RPC |
+| 7100–7799 | Database DDL + MainWP |
+| 8000–8999 | bbPress, LearnDash, SEO (Yoast, RankMath), EDD, Termly |
+| 9000–9499 | WooCommerce (products, orders, coupons, customers, settings) |
+
+Each integration sensor is lazy-loaded — a sensor only attaches its
+hooks when the underlying plugin is active, and you can disable any
+sensor individually under **Settings → Filters**.
+
+## Requirements
+
+- WordPress **6.4+**
+- PHP **8.0+**
+- A site API key (request one through the goBird admin)
 
 ## Local development
 
 ```sh
-composer install
-composer phpcs
-composer test
+composer install        # full dev dependency tree
+composer phpcs          # WordPress Coding Standards
+composer test           # PHPUnit
 ```
 
-## Coding standards
+The Vue admin SPA source lives in the workspace repo, not here — this
+repo ships only the compiled bundle under `assets/admin/`.
 
-Inherits the LW Plugins house rules:
-- PSR-4 autoloading, PascalCase filenames
-- Max **200 lines** per class, **30 lines** per method
-- `declare(strict_types=1);` at the top of every file
-- WordPress Coding Standards (`composer phpcs` before every commit)
-- PHP 8.0+ type declarations on parameters and return types
+## Versioning
+
+Updating the `Version:` line in `hellolog.php` and the `Stable tag:`
+line in `readme.txt` (they must match) is enough — a push to `main`
+triggers `.github/workflows/release.yml`, which builds the installable
+zip and publishes a GitHub Release tagged `v<version>`.
+
+## License
+
+GPL-2.0-or-later.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       helloLOG
  * Plugin URI:        https://hellowp.io/hellolog
- * Description:       Activity log for WordPress that ships events to an external PostgreSQL + TimescaleDB backend. Developed by hellowp.io and gobird.io.
+ * Description:       Lightweight WordPress activity log. By hellowp.io and gobird.io.
  * Version:           0.1.0
  * Requires at least: 6.4
  * Requires PHP:      8.0
