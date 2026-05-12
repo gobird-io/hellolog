@@ -1,6 +1,6 @@
 {
     "name": "gobird-io/hellolog",
-    "description": "WordPress activity audit log with an external (PostgreSQL + TimescaleDB) storage backend.",
+    "description": "Lightweight WordPress activity log by hellowp.io and gobird.io.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/gobird-io/hellolog",

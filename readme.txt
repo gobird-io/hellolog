@@ -1,6 +1,6 @@
 === helloLOG ===
-Contributors:      gobird
-Tags:              activity log, audit log, security, monitoring, postgres
+Contributors:      gobird, hellowp
+Tags:              activity log, audit log, security, monitoring, woocommerce
 Requires at least: 6.4
 Tested up to:      6.7
 Requires PHP:      8.0
@@ -8,14 +8,13 @@ Stable tag:        0.1.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Activity audit log for WordPress that ships events to an external PostgreSQL + TimescaleDB backend.
+Lightweight WordPress activity log by hellowp.io and gobird.io. Events stream to a managed log backend so your WP database stays lean.
 
 == Description ==
 
 Tracks user, content, plugin, theme, system, and integration activity on your
-WordPress site and forwards events to an external API
-(`https://api.gobird.io/v1/wordpress-activity-audit-log` by default). Long-term
-storage, search, retention, and cross-site aggregation happen on the backend —
+WordPress site and forwards every event to a managed log backend. Long-term
+storage, search, retention, and cross-site aggregation happen off-server —
 your WordPress database keeps only a small outgoing queue that drains
 continuously.
 
@@ -23,11 +22,13 @@ continuously.
 
 Other activity log plugins write every event into a dedicated local table
 (often using EAV-style metadata rows). On busy sites those tables grow into
-millions of rows and start to dominate admin UI latency, backups, and replication.
+millions of rows and start to dominate admin UI latency, backups, and
+replication.
 
-helloLOG moves storage off the WordPress database entirely. The
-backend runs on PostgreSQL + TimescaleDB hypertables with 7-day chunks and
-compression — designed for write-heavy audit workloads.
+helloLOG moves storage off the WordPress database entirely. The backend is
+built for write-heavy audit workloads with weekly chunking, compression,
+and configurable retention — without touching your WP DB beyond a small
+queue.
 
 = Logged activity =
 
@@ -49,8 +50,8 @@ is actually active on the site.
 
 1. Upload the plugin to `wp-content/plugins/hellolog/`.
 2. Activate it through the **Plugins** menu in WordPress.
-3. Go to **Settings → Activity Log**, paste the API endpoint URL and the
-   site token issued by your backend admin, and click **Test Connection**.
+3. Go to **Tools → helloLOG → Settings**, paste the API key issued for your
+   site, and click **Send test event**.
 4. Optionally toggle sensors and IP anonymization in the **Filters** tab.
 
 == Frequently Asked Questions ==
@@ -67,11 +68,10 @@ The local queue keeps events until delivery succeeds, with exponential
 backoff. After repeated failures an entry moves to a dead-letter status,
 visible in the **Diagnostics** tab.
 
-= Where do I get a site token? =
+= Where do I get an API key? =
 
-Run `POST /admin/sites` on the backend with `mint_token: true` (admin
-bearer required); the response includes the site token, shown once. Copy
-it into **Settings → Activity Log → Connection**.
+Request one from your goBird account — every site is issued its own
+key, bound to its domain. Paste it into **Tools → helloLOG → Settings**.
 
 == Changelog ==
 
