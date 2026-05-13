@@ -25,6 +25,7 @@ use HelloLog\Sensors\Core\CommentsSensor;
 use HelloLog\Sensors\Core\ContentSensor;
 use HelloLog\Sensors\Core\DatabaseSensor;
 use HelloLog\Sensors\Core\FilesSensor;
+use HelloLog\Sensors\Core\FailedLoginSensor;
 use HelloLog\Sensors\Core\LoginLogoutSensor;
 use HelloLog\Sensors\Core\PluginsSensor;
 use HelloLog\Sensors\Core\AppPasswordsSensor;
@@ -167,12 +168,33 @@ final class Plugin {
 		( new IntegrationsLoader() )->attach( $this->sensors, $this->dispatcher );
 		( new LwLoader() )->attach( $this->sensors, $this->dispatcher );
 
-		$disabled = array_keys( array_filter( $this->options->sensor_filters() ) );
+		// Apply operator-stored sensor flags on top of the
+		// "off by default" list. A sensor is disabled if either:
+		//   - the stored options say so explicitly (`key => true`), or
+		//   - it's in the off-by-default list AND the stored options
+		//     don't mention it at all (operator hasn't expressed an
+		//     opinion, so we keep our default).
+		// Explicit `key => false` in the stored options always wins.
+		$stored        = $this->options->sensor_filters();
+		$off_by_default = [ 'core-request', 'core-failed-login' ];
+
+		$disabled = [];
+		foreach ( $stored as $key => $is_disabled ) {
+			if ( $is_disabled ) {
+				$disabled[] = $key;
+			}
+		}
+		foreach ( $off_by_default as $key ) {
+			if ( ! array_key_exists( $key, $stored ) ) {
+				$disabled[] = $key;
+			}
+		}
 		$this->sensors->disable( $disabled );
 	}
 
 	private function register_core_sensors(): void {
 		$this->sensors->register( new LoginLogoutSensor( $this->dispatcher ) );
+		$this->sensors->register( new FailedLoginSensor( $this->dispatcher ) );
 		$this->sensors->register( new UserProfileSensor( $this->dispatcher ) );
 		$this->sensors->register( new ContentSensor( $this->dispatcher ) );
 		$this->sensors->register( new CommentsSensor( $this->dispatcher ) );

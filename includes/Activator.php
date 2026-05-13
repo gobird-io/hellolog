@@ -26,7 +26,11 @@ final class Activator {
 	 * default. Operators can toggle them back on from Filters tab.
 	 */
 	private const DEFAULT_DISABLED_SENSORS = [
-		'core-request' => true,
+		'core-request'      => true,
+		// Failed-login attempts are noisy on internet-exposed sites
+		// (bot dictionary attacks fire dozens per minute). Off by
+		// default; operators flip it on for incident investigation.
+		'core-failed-login' => true,
 	];
 
 	private const DEFAULT_OPTS = [

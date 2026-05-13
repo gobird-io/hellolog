@@ -92,10 +92,15 @@ final class SettingsController {
 			update_option( Options::KEY_ANONYMIZE_IP, (bool) $body['anonymizeIp'] );
 		}
 		if ( isset( $body['sensorFilters'] ) && is_array( $body['sensorFilters'] ) ) {
+			// Preserve BOTH `true` (disabled) and `false` (explicitly
+			// enabled) values so the operator can override a sensor
+			// that ships off by default. Plugin::assemble_services()
+			// distinguishes between "missing key" (apply default) and
+			// "explicitly false" (operator opted in).
 			$clean = [];
 			foreach ( $body['sensorFilters'] as $key => $disabled ) {
-				if ( is_string( $key ) && (bool) $disabled ) {
-					$clean[ sanitize_key( $key ) ] = true;
+				if ( is_string( $key ) ) {
+					$clean[ sanitize_key( $key ) ] = (bool) $disabled;
 				}
 			}
 			update_option( Options::KEY_SENSOR_FILTERS, $clean );

@@ -15,9 +15,10 @@ use WP_User;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Wraps the canonical auth hooks: successful login, failed login, logout,
- * and password-reset requests. Anonymous-user context is filled in for
- * failed logins where {@see wp_get_current_user()} returns the guest.
+ * Wraps the *successful* auth hooks: login, logout, password-reset
+ * requests. Failed login attempts moved to {@see FailedLoginSensor}
+ * because they're noisy on internet-exposed sites and operators often
+ * want them off by default.
  */
 final class LoginLogoutSensor extends AbstractSensor {
 
@@ -28,7 +29,6 @@ final class LoginLogoutSensor extends AbstractSensor {
 	public function boot(): void {
 		add_action( 'wp_login', [ $this, 'on_login' ], 10, 2 );
 		add_action( 'wp_logout', [ $this, 'on_logout' ], 10, 1 );
-		add_action( 'wp_login_failed', [ $this, 'on_failed_login' ], 10, 1 );
 		add_action( 'retrieve_password_key', [ $this, 'on_password_reset_request' ], 10, 1 );
 	}
 
@@ -59,16 +59,6 @@ final class LoginLogoutSensor extends AbstractSensor {
 					]
 					: null,
 				'username' => $user instanceof WP_User ? (string) $user->user_login : '',
-			]
-		);
-	}
-
-	public function on_failed_login( string $username ): void {
-		$this->emit(
-			1002,
-			[
-				'username' => $username,
-				'metadata' => [ 'attempted_username' => $username ],
 			]
 		);
 	}
