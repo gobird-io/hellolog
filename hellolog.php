@@ -14,6 +14,7 @@
  * Domain Path:       /languages
  *
  * @package HelloLog
+ 
  */
 
 declare(strict_types=1);
