@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.0] - 2026-05-13
+
+### Added
+- Dedicated `core-failed-login` sensor, off by default. Failed
+  WordPress login attempts no longer travel with the everyday auth
+  events — operators flip it on from **Settings → Filters** when
+  they're investigating an incident.
+- Per-sensor descriptions on the Filters tab so the on/off decision
+  doesn't depend on guessing what the slug means.
+- "Remove API key" disconnect button on the Connection tab, and a
+  client-side format check before saving the key.
+- Backend domain pinning: every request carries an `X-Site-Domain`
+  header; tokens issued for one site won't authenticate from another.
+- PHP-version guard in the plugin bootstrap. On PHP < 8.0 the plugin
+  stops loading at the first `require` and shows a single admin
+  notice instead of fataling the whole site.
+
+### Changed
+- Admin UI consolidated into a single Tools-level page (`Tools →
+  helloLOG`) with a sticky top bar, sidebar sub-tabs and shadcn-vue
+  components. The old Settings-menu entry is retired.
+- "Token" relabelled to "API key" everywhere user-facing.
+- README, plugin-header description and composer description no longer
+  mention the backend stack — those internals stay in the private
+  workspace docs.
+
 ## [0.1.0] - 2026-05-11
 
 ### Added

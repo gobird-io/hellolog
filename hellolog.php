@@ -3,7 +3,7 @@
  * Plugin Name:       helloLOG
  * Plugin URI:        https://hellowp.io/hellolog
  * Description:       Lightweight WordPress activity log. By hellowp.io and gobird.io.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            HelloWP &amp; goBird
@@ -20,7 +20,37 @@ declare(strict_types=1);
 
 defined( 'ABSPATH' ) || exit;
 
-const HELLOLOG_VERSION = '0.1.0';
+// Bail out gracefully on outdated PHP. The plugin relies on typed
+// constructor promotion, `match`, named arguments and other PHP 8.0+
+// features in the autoloaded classes — letting WordPress include them
+// on PHP 7.x would fatal the whole site. Instead we stop loading the
+// plugin here and surface a single admin notice so the operator knows
+// what happened. `version_compare` has existed since PHP 4.1, so the
+// check itself is safe on every plausible runtime.
+if ( version_compare( PHP_VERSION, '8.0', '<' ) ) {
+	add_action(
+		'admin_notices',
+		static function (): void {
+			if ( ! current_user_can( 'activate_plugins' ) ) {
+				return;
+			}
+			printf(
+				'<div class="notice notice-error"><p>%s</p></div>',
+				esc_html(
+					sprintf(
+						/* translators: 1: required PHP version, 2: current PHP version */
+						__( 'helloLOG requires PHP %1$s or newer. Your site is running PHP %2$s, so the plugin is not loaded. Upgrade PHP or deactivate the plugin.', 'hellolog' ),
+						'8.0',
+						PHP_VERSION
+					)
+				)
+			);
+		}
+	);
+	return;
+}
+
+const HELLOLOG_VERSION = '0.2.0';
 const HELLOLOG_FILE    = __FILE__;
 
 define( 'HELLOLOG_DIR', plugin_dir_path( __FILE__ ) );

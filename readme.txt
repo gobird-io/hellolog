@@ -4,7 +4,7 @@ Tags:              activity log, audit log, security, monitoring, woocommerce
 Requires at least: 6.4
 Tested up to:      6.7
 Requires PHP:      8.0
-Stable tag:        0.1.0
+Stable tag:        0.2.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,28 @@ Request one from your goBird account — every site is issued its own
 key, bound to its domain. Paste it into **Tools → helloLOG → Settings**.
 
 == Changelog ==
+
+= 0.2.0 =
+* New: Failed login attempts split into their own `core-failed-login`
+  sensor, off by default — noisy on internet-exposed sites, easy to flip
+  on for incident investigation.
+* New: Per-sensor descriptions on the Filters tab so you know what each
+  sensor records before flipping its switch.
+* New: API key disconnect button — wipe the stored key from the SPA
+  without leaving WordPress.
+* New: Backend domain pinning — each API key is bound to the site it
+  was issued for; the plugin sends an `X-Site-Domain` header on every
+  request, mismatches are rejected with 403.
+* New: PHP-version guard — if the runtime is below 8.0 the plugin
+  refuses to load and surfaces an admin notice instead of fataling.
+* Change: Settings UI redesigned as a single Tools-level page with a
+  sticky top bar, sidebar sub-tabs (Connection / Filters / Diagnostics),
+  and shadcn-style components.
+* Change: "Token" renamed to "API key" everywhere in the UI; the Save
+  step now validates the format up-front instead of relying on the
+  backend to reject malformed input.
+* Change: README + Plugins-screen description trimmed so they no longer
+  publish backend internals.
 
 = 0.1.0 =
 * New: Initial release — plugin scaffold, activation/deactivation lifecycle,
