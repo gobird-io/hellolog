@@ -4,7 +4,7 @@ Tags:              activity log, audit log, security, monitoring, woocommerce
 Requires at least: 6.4
 Tested up to:      6.7
 Requires PHP:      8.0
-Stable tag:        0.2.0
+Stable tag:        0.3.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,22 @@ Request one from your goBird account — every site is issued its own
 key, bound to its domain. Paste it into **Tools → helloLOG → Settings**.
 
 == Changelog ==
+
+= 0.3.0 =
+* New: License gate — the plugin only attaches sensors after a stored
+  API key successfully delivers a test event to the backend. No more
+  silent pile-up in the dead queue when the key is wrong or revoked.
+* New: Save in **Tools → helloLOG → Settings** automatically fires a
+  test event; the top-bar shows `Active`, `Awaiting validation`, or
+  `Not active` accordingly.
+* New: `wp hellolog clear-queue [--status=<status>]` to wipe the local
+  outgoing queue in one shot (useful after a long stretch with a bad
+  key).
+* Change: `wp hellolog test` now stamps the license verified flag on
+  HTTP 2xx so the next request actually attaches the sensors; failures
+  reset the flag.
+* Change: `wp hellolog status` reports the license state alongside the
+  stored-key state, and no longer prints the backend URL.
 
 = 0.2.0 =
 * New: Failed login attempts split into their own `core-failed-login`

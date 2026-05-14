@@ -40,8 +40,8 @@ final class Command {
 		$repo   = new QueueRepository();
 		$counts = $repo->counts_by_status();
 
-		WP_CLI::log( 'Endpoint:    ' . Options::ENDPOINT_URL );
-		WP_CLI::log( 'Token set:   ' . ( $opts->is_configured() ? 'yes' : 'NO' ) );
+		WP_CLI::log( 'API key:     ' . ( $opts->is_configured() ? 'set' : 'missing' ) );
+		WP_CLI::log( 'License:     ' . ( $opts->is_active() ? 'active (sensors attached)' : 'inactive — run `wp hellolog test` to validate' ) );
 		WP_CLI::log( 'Anonymize IP: ' . ( $opts->anonymize_ip() ? 'on' : 'off' ) );
 		WP_CLI::log( 'Queue table: ' . $repo->table() );
 		WP_CLI::log(
@@ -106,11 +106,14 @@ final class Command {
 			]
 		);
 		$result = $client->post_batch( is_string( $batch ) ? $batch : '' );
+		// A successful test event flips the license to "active" — this
+		// is the only path from "stored key" to "sensors attached".
+		$opts->mark_active( $result->ok );
 		if ( $result->ok ) {
-			WP_CLI::success( sprintf( 'HTTP %d %s', $result->status, $result->body ) );
+			WP_CLI::success( sprintf( 'HTTP %d %s — license verified, sensors will attach on next request.', $result->status, $result->body ) );
 			return;
 		}
-		WP_CLI::error( sprintf( 'HTTP %d %s', $result->status, $result->body ) );
+		WP_CLI::error( sprintf( 'HTTP %d %s — license NOT verified, sensors stay detached.', $result->status, $result->body ) );
 	}
 
 	/**
@@ -135,7 +138,12 @@ final class Command {
 			WP_CLI::error( 'Empty token.' );
 		}
 		update_option( Options::KEY_TOKEN, sanitize_text_field( $token ) );
-		WP_CLI::success( 'Token saved (last 4: ' . substr( $token, -4 ) . ').' );
+		// New key — license must be re-verified before sensors run.
+		( new Options() )->mark_active( false );
+		WP_CLI::success(
+			'Token saved (last 4: ' . substr( $token, -4 ) . '). '
+			. 'Run `wp hellolog test` to verify and activate.'
+		);
 	}
 
 	/**
@@ -150,7 +158,36 @@ final class Command {
 	 */
 	public function clear_token(): void {
 		delete_option( Options::KEY_TOKEN );
-		WP_CLI::success( 'Token cleared.' );
+		( new Options() )->mark_active( false );
+		WP_CLI::success( 'Token cleared. Sensors detached.' );
+	}
+
+	/**
+	 * Wipe rows from the local outgoing queue. Useful after a long
+	 * stretch with a bad token — the dead pile-up can be deleted in one
+	 * shot once the operator stops the bleeding.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--status=<status>]
+	 * : Limit to one queue status (pending / sending / dead). Default: all.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp hellolog clear-queue --status=dead
+	 *     wp hellolog clear-queue
+	 *
+	 * @subcommand clear-queue
+	 *
+	 * @param array<int, string>    $args
+	 * @param array<string, string> $assoc
+	 */
+	public function clear_queue( array $args, array $assoc = [] ): void {
+		unset( $args );
+		$repo    = new QueueRepository();
+		$status  = isset( $assoc['status'] ) ? (string) $assoc['status'] : '';
+		$deleted = $repo->purge( '' !== $status ? $status : null );
+		WP_CLI::success( sprintf( 'Deleted %d row(s)%s.', $deleted, '' !== $status ? ' with status=' . $status : '' ) );
 	}
 
 	/**

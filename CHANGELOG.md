@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.3.0] - 2026-05-14
+
+### Added
+- **License gate.** The plugin now refuses to attach sensors until the
+  stored API key has successfully delivered a test event to the
+  backend. Without this gate a wrong/revoked key would silently bury
+  the local queue in `dead` rows (one site reported 25k of them).
+  Sensors stay detached until `Options::mark_active(true)` flips —
+  driven by `TestConnectionHandler`, `wp hellolog test`, or the new
+  Save-then-test flow in the SPA.
+- Top-bar status now distinguishes three states: `Active` (green),
+  `Awaiting validation` (amber — key stored but not yet verified), and
+  `Not active` (red — no key).
+- Logs tab empty-state is split: missing-key versus
+  pending-validation get separate copy.
+- `wp hellolog clear-queue [--status=<status>]` to wipe the local
+  outgoing queue. Useful after a long stretch with a bad key — the
+  dead pile-up can be deleted in one shot.
+
+### Changed
+- Saving an API key in the SPA fires a test event automatically; a
+  successful round-trip activates the license, a failure leaves the
+  key stored but inactive with an explanatory toast.
+- `wp hellolog test` flips the verified flag on a 2xx response,
+  resets it on anything else.
+- `wp hellolog set-token` / `clear-token` reset the verified flag, so
+  the next request needs an explicit `wp hellolog test` to bring the
+  license back online.
+- `wp hellolog status` reports the license state alongside the stored
+  key, and no longer prints the backend URL (in keeping with the
+  earlier doc sanitisation).
+
 ## [0.2.0] - 2026-05-13
 
 ### Added

@@ -78,6 +78,9 @@ final class SettingsController {
 		// as the operator's intent.
 		if ( ! empty( $body['clearToken'] ) ) {
 			delete_option( Options::KEY_TOKEN );
+			// Clearing the key invalidates the license — sensors stop on
+			// the next boot.
+			( new Options() )->mark_active( false );
 		} elseif ( isset( $body['token'] ) && is_string( $body['token'] ) && '' !== trim( $body['token'] ) ) {
 			$candidate = sanitize_text_field( trim( $body['token'] ) );
 			if ( ! Options::is_valid_token( $candidate ) ) {
@@ -87,6 +90,9 @@ final class SettingsController {
 				);
 			}
 			update_option( Options::KEY_TOKEN, $candidate );
+			// New key → reset the verified flag. The SPA fires a test
+			// event right after Save; that's what flips it back on.
+			( new Options() )->mark_active( false );
 		}
 		if ( array_key_exists( 'anonymizeIp', $body ) ) {
 			update_option( Options::KEY_ANONYMIZE_IP, (bool) $body['anonymizeIp'] );

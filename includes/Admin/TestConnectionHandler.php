@@ -59,6 +59,10 @@ final class TestConnectionHandler {
 		}
 
 		$result = $client->post_batch( $batch );
+		// A successful round-trip is what flips the license from "stored"
+		// to "active". Sensors only attach after this, so it's the
+		// gatekeeping step.
+		$options->mark_active( $result->ok );
 		if ( $result->ok ) {
 			wp_send_json_success(
 				[

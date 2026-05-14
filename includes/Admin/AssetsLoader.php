@@ -152,9 +152,10 @@ JS;
 			'nonce'         => wp_create_nonce( ActivityLogAjax::ACTION ),
 			'testNonce'     => wp_create_nonce( TestConnectionHandler::ACTION ),
 			'endpoint'      => Options::ENDPOINT_URL,
-			'tokenLastFour' => '' !== $token ? substr( $token, -4 ) : '',
-			'isConfigured'  => $options->is_configured(),
-			'anonymizeIp'   => $options->anonymize_ip(),
+			'tokenLastFour'  => '' !== $token ? substr( $token, -4 ) : '',
+			'isConfigured'   => $options->is_configured(),
+			'isLicenseValid' => $options->is_active(),
+			'anonymizeIp'    => $options->anonymize_ip(),
 			'sensors'       => $this->sensors_payload( $plugin, $options ),
 			'queue'         => $this->queue_payload(),
 		];

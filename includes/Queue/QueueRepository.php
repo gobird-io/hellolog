@@ -84,6 +84,26 @@ final class QueueRepository {
 	}
 
 	/**
+	 * Wipe rows from the queue, optionally limited to one status.
+	 * Used by `wp hellolog clear-queue` to drain a dead-pile-up that
+	 * accumulated while the license was misconfigured.
+	 *
+	 * @return int rows deleted
+	 */
+	public function purge( ?string $status = null ): int {
+		global $wpdb;
+		$table = $this->table();
+		if ( null === $status ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$deleted = $wpdb->query( "DELETE FROM {$table}" );
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE status = %s", $status ) );
+		}
+		return (int) $deleted;
+	}
+
+	/**
 	 * @param array<int, int> $ids
 	 */
 	public function delete_many( array $ids ): void {

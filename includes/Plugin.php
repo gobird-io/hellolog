@@ -161,6 +161,16 @@ final class Plugin {
 		$this->dispatcher = $this->build_dispatcher();
 		$this->sensors    = new SensorManager();
 
+		// License gate: nothing attaches its hooks until the operator has
+		// stored a valid-format key AND the plugin has confirmed at least
+		// once that the backend accepts it. Without this the dispatcher
+		// would happily queue thousands of events while the backend 401s
+		// every flush — the WP queue fills up with "dead" rows and the
+		// site does pointless work.
+		if ( ! $this->options->is_active() ) {
+			return;
+		}
+
 		$this->register_core_sensors();
 		( new WooCommerceLoader() )->attach( $this->sensors, $this->dispatcher );
 		( new FormsLoader() )->attach( $this->sensors, $this->dispatcher );

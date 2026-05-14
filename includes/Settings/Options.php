@@ -27,9 +27,14 @@ final class Options {
 	 */
 	public const ENDPOINT_URL = 'https://api.gobird.io/v1/wordpress-activity-audit-log';
 
-	public const KEY_TOKEN          = 'hellolog_token';
-	public const KEY_ANONYMIZE_IP   = 'hellolog_anonymize_ip';
-	public const KEY_SENSOR_FILTERS = 'hellolog_sensor_filters';
+	public const KEY_TOKEN           = 'hellolog_token';
+	public const KEY_ANONYMIZE_IP    = 'hellolog_anonymize_ip';
+	public const KEY_SENSOR_FILTERS  = 'hellolog_sensor_filters';
+	// `1` once the stored token successfully delivered a test event;
+	// reset to `0` whenever the operator changes (or clears) the key.
+	// Sensors only attach hooks when this flag is `1`, otherwise we
+	// would queue thousands of events that the backend rejects.
+	public const KEY_TOKEN_VERIFIED  = 'hellolog_token_verified';
 
 	public function endpoint_url(): string {
 		return self::ENDPOINT_URL;
@@ -50,6 +55,23 @@ final class Options {
 	 */
 	public function is_configured(): bool {
 		return self::is_valid_token( $this->token() );
+	}
+
+	/**
+	 * `true` when the stored token has at least once delivered a test
+	 * event to the backend successfully. The activation flow flips this
+	 * on; changing or clearing the key flips it back off.
+	 *
+	 * `is_configured()` is necessary but not sufficient for the plugin
+	 * to start collecting — without `is_active()` the sensors stay
+	 * detached.
+	 */
+	public function is_active(): bool {
+		return $this->is_configured() && (bool) get_option( self::KEY_TOKEN_VERIFIED, false );
+	}
+
+	public function mark_active( bool $active ): void {
+		update_option( self::KEY_TOKEN_VERIFIED, $active ? 1 : 0 );
 	}
 
 	/**
