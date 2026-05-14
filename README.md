@@ -13,12 +13,29 @@ status|flush|test|sensors|…`), and a token-based privacy model
 
 ## Install
 
+### Composer (Bedrock / Roots / Composer-managed sites)
+
+```sh
+composer require gobird-io/hellolog
+```
+
+The package is registered on [Packagist](https://packagist.org/packages/gobird-io/hellolog).
+The `wordpress-plugin` type plus `composer/installers` puts it under
+`wp-content/plugins/hellolog/` automatically.
+
+### Manual upload (classic sites)
+
 1. Grab the latest `hellolog-<version>.zip` from
    [Releases](https://github.com/gobird-io/hellolog/releases).
 2. **WP Admin → Plugins → Add New → Upload Plugin** → upload, activate.
-3. Open **Tools → helloLOG → Settings** and paste the API key issued for
-   this site in the goBird admin. Save → the top bar should switch to
-   `Active`. The **Send test event** button confirms end-to-end delivery.
+
+### Configure (both install paths)
+
+Open **Tools → helloLOG → Settings**, paste the API key issued for
+this site, and Save. The plugin fires a test event automatically; the
+top bar should switch to `Active`. Until that test succeeds, no
+sensors attach and no rows hit the local queue — see "License gate"
+in `CHANGELOG.md` for the rationale.
 
 ## What it logs
 

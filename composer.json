@@ -4,9 +4,35 @@
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/gobird-io/hellolog",
+    "keywords": [
+        "wordpress",
+        "wordpress-plugin",
+        "activity-log",
+        "audit-log",
+        "security",
+        "monitoring",
+        "logging",
+        "hellowp",
+        "gobird"
+    ],
+    "authors": [
+        {
+            "name": "HelloWP",
+            "homepage": "https://hellowp.io"
+        },
+        {
+            "name": "goBird",
+            "homepage": "https://gobird.io"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/gobird-io/hellolog/issues",
+        "source": "https://github.com/gobird-io/hellolog"
+    },
     "minimum-stability": "stable",
     "require": {
         "php": ">=8.0",
+        "composer/installers": "^2.0",
         "woocommerce/action-scheduler": "^3.8"
     },
     "require-dev": {
@@ -34,6 +60,7 @@
     },
     "config": {
         "allow-plugins": {
+            "composer/installers": true,
             "dealerdirect/phpcodesniffer-composer-installer": true
         },
         "optimize-autoloader": true,
